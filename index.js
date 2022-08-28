@@ -2,6 +2,7 @@ const express = require("express")
 require("dotenv/config")
 const mongoose = require("mongoose")
 const cred = require("./models/cred")
+const port = process.env.PORT || 5000;
 
 const app = express()
 mongoose.connect(process.env.DB_CONNECTION, () => {
@@ -52,6 +53,6 @@ app.post("/login",async (req,res) => {
 })
 
 
-app.listen(5000,() => {
+app.listen(port,() => {
     console.log("Server running on port 5000....")
 })
