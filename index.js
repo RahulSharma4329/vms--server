@@ -28,10 +28,12 @@ app.post("/register", async (req, res) => {
   try {
     const { username } = req.body;
     const { password } = req.body;
+    const { role } = req.body;
 
     const senddata = new cred({
       username: username,
       password: password,
+      role: role,
     });
 
     const saveCred = await senddata.save();
