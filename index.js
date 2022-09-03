@@ -5,6 +5,7 @@ const cred = require("./models/cred");
 const port = process.env.PORT || 5000;
 const cors = require("cors");
 const stdata = require("./models/stdata");
+const addata = require("./models/addata")
 
 const app = express();
 mongoose.connect(process.env.DB_CONNECTION, () => {});
@@ -30,14 +31,24 @@ app.post("/adregister", async (req, res) => {
     const { username } = req.body;
     const { password } = req.body;
     const { role } = req.body;
+    const { name } = req.body;
+    const { phone } = req.body;
+    const {officerlevel} = req.body;
 
     const senddata = new cred({
       username: username,
       password: password,
       role: role,
     });
+    const sendaddata = new addata({
+      name: name,
+      email: username,
+      phone: phone,
+      officerlevel:officerlevel
+    })
 
     const saveCred = await senddata.save();
+    const saveaddata = await sendaddata.save();
     res.status(200).json({ success: true, data: saveCred });
   } catch (error1) {
     res.status(400).json({ success: false, data: [], error: error1 });
