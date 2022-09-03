@@ -44,7 +44,7 @@ app.post("/adregister", async (req, res) => {
       name: name,
       email: username,
       phone: phone,
-      officerlevel:officerlevel
+      officerlevel:officerlevel,
     })
 
     const saveCred = await senddata.save();
