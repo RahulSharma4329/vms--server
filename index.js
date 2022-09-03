@@ -49,7 +49,7 @@ app.post("/adregister", async (req, res) => {
 
     const saveCred = await senddata.save();
     const saveaddata = await sendaddata.save();
-    res.status(200).json({ success: true, data: saveCred });
+    res.status(200).json({ success: true, data: saveaddata });
   } catch (error1) {
     res.status(400).json({ success: false, data: [], error: error1 });
   }
