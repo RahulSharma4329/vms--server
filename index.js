@@ -5,7 +5,7 @@ const cred = require("./models/cred");
 const port = process.env.PORT || 5000;
 const cors = require("cors");
 const stdata = require("./models/stdata");
-const addata = require("./models/addata")
+const addata = require("./models/addata");
 
 const app = express();
 mongoose.connect(process.env.DB_CONNECTION, () => {});
