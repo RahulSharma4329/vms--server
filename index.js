@@ -6,6 +6,7 @@ const port = process.env.PORT || 5000;
 const cors = require("cors");
 const stdata = require("./models/stdata");
 const addata = require("./models/addata");
+const complaints = require("./models/complaints");
 
 const app = express();
 mongoose.connect(process.env.DB_CONNECTION, () => {});
@@ -90,6 +91,22 @@ app.post("/stregister", async (req, res) => {
     res.status(200).json({ success: true, data: saveCred });
   } catch (error1) {
     res.status(400).json({ success: false, data: [], error: error1 });
+  }
+});
+
+app.post("/storecomplaints", async (req, res) => {
+  try {
+    const { username, complaintbody } = req.body;
+    const query = new complaints({
+      name: username,
+      complaint: complaintbody,
+      assignedto: "1",
+      status: "open",
+    });
+    const savecomplaintdeeet = await query.save();
+    res.status(200).json({ success: true, data: savecomplaintdeeet });
+  } catch (error) {
+    res.status(400).json({ success: false, data: {} });
   }
 });
 
