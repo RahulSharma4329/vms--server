@@ -33,7 +33,7 @@ app.post("/adregister", async (req, res) => {
     const { role } = req.body;
     const { name } = req.body;
     const { phone } = req.body;
-    const {officerlevel} = req.body;
+    const { officerlevel } = req.body;
 
     const senddata = new cred({
       username: username,
@@ -44,8 +44,8 @@ app.post("/adregister", async (req, res) => {
       name: name,
       email: username,
       phone: phone,
-      officerlevel:officerlevel,
-    })
+      officerlevel: officerlevel,
+    });
 
     const saveCred = await senddata.save();
     const saveaddata = await sendaddata.save();
@@ -100,6 +100,26 @@ app.post("/login", async (req, res) => {
       password: req.body.password,
     });
     res.status(200).json({ success: true, data: recdata });
+  } catch (error) {
+    res.status(400).json({ success: false, data: [], error: error });
+  }
+});
+
+app.post("/fetchdets", async (req, res) => {
+  const { role } = req.body;
+
+  try {
+    if (role === "student") {
+      const getdata = await stdata.find({
+        email: req.body.username,
+      });
+      res.status(200).json({ success: true, data: getdata });
+    } else if (role === "admin") {
+      const getdata = await addata.find({
+        email: req.body.username,
+      });
+      res.status(200).json({ success: true, data: getdata });
+    }
   } catch (error) {
     res.status(400).json({ success: false, data: [], error: error });
   }
