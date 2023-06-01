@@ -1,26 +1,26 @@
 const mongoose = require("mongoose");
 
-const Cred = new mongoose.Schema({
-  username: {
+const visitordata = new mongoose.Schema({
+  company: {
     type: String,
     required: true,
   },
-  password: {
+  Country: {
     type: String,
     required: true,
   },
-  role: {
+  Image: {
     type: String,
     required: true,
   },
-  name: {
+  vdetails: {
     type: String,
     required: true,
   },
-  phone: {
-    type: String,
+  ddetails: {
+    type: Object,
     required: true,
   },
 });
 
-module.exports = mongoose.model("cred", Cred);
+module.exports = mongoose.model("visitordata", visitordata);

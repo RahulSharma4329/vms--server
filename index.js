@@ -94,6 +94,29 @@ app.post("/stregister", async (req, res) => {
   }
 });
 
+app.post("/register", async (req, res) => {
+  try {
+    const { username } = req.body;
+    const { password } = req.body;
+    const { role } = req.body;
+    const { name } = req.body;
+    const { phone } = req.body;
+
+    const senddata = new cred({
+      username: username,
+      password: password,
+      role: role,
+      name: name,
+      phone: phone,
+    });
+
+    const saveCred = await senddata.save();
+    res.status(200).json({ success: true, data: saveCred });
+  } catch (error1) {
+    res.status(400).json({ success: false, data: [], error: error1 });
+  }
+});
+
 app.post("/storecomplaints", async (req, res) => {
   try {
     const { username, complaintbody } = req.body;
