@@ -13,20 +13,28 @@ const visitordata = new mongoose.Schema({
     type: String,
     required: true,
   },
+  date: {
+    type: String,
+    required: true,
+  },
   purpose: {
     type: String,
     required: true,
   },
-  apdate: {
+  address: {
     type: String,
     required: true,
   },
-  age: {
+  country: {
     type: String,
     required: true,
   },
-  apnumber: {
+  city: {
     type: String,
+    required: true,
+  },
+  appnumber: {
+    type: Number,
     required: true,
   },
 });
