@@ -325,7 +325,7 @@ app.post("/savevisitappointment", async (req, res) => {
     const savedata = await query.save();
     const emailresp = await sendemail(
       "rahulsharma4329@gmail.com",
-      "http://localhost:3000/dashboard",
+      "https://deluxe-cuchufli-2f0da8.netlify.app//dashboard",
       name
     );
     console.log(emailresp);
@@ -354,7 +354,7 @@ app.post("/approvereq", async (req, res) => {
     const emailresp = await sendemail2(
       email,
       "closed",
-      "http://localhost:3000/response/?id=" + id
+      "https://deluxe-cuchufli-2f0da8.netlify.app/response/?id=" + id
     );
     res.status(200).json({ success: true });
   } catch (error) {
