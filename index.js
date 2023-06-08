@@ -9,6 +9,8 @@ const addata = require("./models/addata");
 const complaints = require("./models/complaints");
 const visitordata = require("./models/vistior");
 const nodemailer = require("nodemailer");
+const visitorfurtherdata = require("./models/visitorfurtherdata");
+var bodyParser = require("body-parser");
 
 const app = express();
 mongoose.connect(process.env.DB_CONNECTION, () => {});
@@ -20,7 +22,8 @@ db.once("open", function () {
 });
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ limit: "100mb", extended: false }));
+app.use(bodyParser.json({ limit: "100mb" }));
 app.use(cors());
 
 router = express.Router();
@@ -59,8 +62,44 @@ async function sendemail(recipientEmail, link, name) {
   }
 }
 
+async function sendemail2(recipientEmail, status, link) {
+  let body;
+  if (status == "closed") {
+    status = "accepted";
+    body = `
+        <h1> your request has been ${status}</h1>
+        <p>please fill out this form for further details</p>
+        <a href="${link}">
+          <button>Fill out form</button>
+        </a>
+      `;
+  } else {
+    body = `
+        <h1> your request has been ${status}</h1>
+      `;
+  }
+  const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: "sem6sectioncvms@gmail.com", // Your email address
+      pass: "mdlxbnxjzrysbdju", // Your email password
+    },
+  });
+  try {
+    await transporter.sendMail({
+      from: "sem6sectioncvms@gmail.com", // Your email address
+      to: recipientEmail,
+      subject: "Response for Inquiry OF Visit",
+      html: body,
+    });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 app.get("/", (req, res) => {
-  res.send("HMS_API is live");
+  res.send("VMS_API is live");
 });
 
 app.post("/adregister", async (req, res) => {
@@ -209,8 +248,56 @@ app.post("/fetchdets", async (req, res) => {
   }
 });
 
+app.post("/getprequests", async (req, res) => {
+  try {
+    const reqdata = await visitordata.find({ status: "open" });
+    res.status(200).json({
+      success: true,
+      data: reqdata,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      data: [],
+    });
+  }
+});
+
+app.post("/getarequests", async (req, res) => {
+  try {
+    const reqdata = await visitordata.find({ status: "active" });
+    res.status(200).json({
+      success: true,
+      data: reqdata,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      data: [],
+    });
+  }
+});
+
+app.post("/getmoredata", async (req, res) => {
+  const id = req.body;
+  console.log(id);
+  try {
+    const reqdata = await visitorfurtherdata.find({ appid: id.id });
+    res.status(200).json({
+      success: true,
+      data: reqdata,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      data: [],
+      error: error,
+    });
+  }
+});
+
 app.post("/savevisitappointment", async (req, res) => {
-  const { name, email, phone, date, purpose, address, country, city } =
+  const { name, email, phone, date, purpose, address, country, city, status } =
     req.body;
   const last_entry = await visitordata.find().sort({ _id: -1 }).limit(1);
   console.log("this is last entry", last_entry);
@@ -231,11 +318,16 @@ app.post("/savevisitappointment", async (req, res) => {
       country: country,
       city: city,
       appnumber: newappnumber,
+      status: status,
     });
 
     // console.log(query);
     const savedata = await query.save();
-    const emailresp = await sendemail(email, "https://www.vms.com", name);
+    const emailresp = await sendemail(
+      "rahulsharma4329@gmail.com",
+      "http://localhost:3000/dashboard",
+      name
+    );
     console.log(emailresp);
     res.status(200).json({ success: true, data: savedata });
   } catch (error) {
@@ -244,6 +336,127 @@ app.post("/savevisitappointment", async (req, res) => {
   }
 });
 
+app.post("/approvereq", async (req, res) => {
+  const { id, email } = req.body;
+  console.log(id);
+  try {
+    visitordata.updateOne(
+      { _id: id },
+      { status: "closed" },
+      function (err, docs) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("Updated Docs : ", docs);
+        }
+      }
+    );
+    const emailresp = await sendemail2(
+      email,
+      "closed",
+      "http://localhost:3000/response/?id=" + id
+    );
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      data: error,
+    });
+  }
+});
+
+app.post("/rejectreq", async (req, res) => {
+  const { id, email } = req.body;
+  console.log(id);
+  try {
+    visitordata.updateOne(
+      { _id: id },
+      { status: "rejected" },
+      function (err, docs) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("Updated Docs : ", docs);
+        }
+      }
+    );
+    const emailresp = await sendemail2(
+      email,
+      "rejected",
+      "we could not approve your request for a visit"
+    );
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      data: error,
+    });
+  }
+});
+
+app.post("/savefurtherdata", async (req, res) => {
+  const {
+    cname,
+    country,
+    photo,
+    vehicle,
+    device,
+    devicetype,
+    deviceserial,
+    wifi,
+    appid,
+    qrcode,
+  } = req.body;
+  const savequery = new visitorfurtherdata({
+    company: cname,
+    Country: country,
+    Image: photo,
+    vdetails: vehicle,
+    device: device,
+    devicetype: devicetype,
+    deviceserial: deviceserial,
+    wifi: wifi,
+    appid: appid,
+    qrcode: qrcode,
+  });
+  try {
+    visitordata.updateOne(
+      { _id: appid },
+      { status: "active" },
+      function (err, docs) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("Updated Docs : ", docs);
+        }
+      }
+    );
+    const saving = await savequery.save();
+    res.status(200).json({ success: true, data: saving });
+  } catch (error) {
+    res.status(400).json({ success: false, data: [], error: error });
+  }
+});
+
+app.post("/updateqrinfo", async (req, res) => {
+  const { id } = req.body;
+  try {
+    visitordata.updateOne(
+      { _id: id },
+      { status: "scanned" },
+      function (err, docs) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("Updated Docs : ", docs);
+        }
+      }
+    );
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(200).json({ success: true, error: error });
+  }
+});
 app.listen(port, () => {
   console.log("Server running on port 5000....");
 });

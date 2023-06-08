@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const visitordata = new mongoose.Schema({
+const visitorfurtherdata = new mongoose.Schema({
   company: {
     type: String,
     required: true,
@@ -17,10 +17,30 @@ const visitordata = new mongoose.Schema({
     type: String,
     required: true,
   },
-  ddetails: {
-    type: Object,
+  device: {
+    type: String,
+    required: true,
+  },
+  devicetype: {
+    type: String,
+    required: true,
+  },
+  deviceserial: {
+    type: String,
+    required: true,
+  },
+  wifi: {
+    type: String,
+    required: true,
+  },
+  appid: {
+    type: String,
+    required: true,
+  },
+  qrcode: {
+    type: String,
     required: true,
   },
 });
 
-module.exports = mongoose.model("visitordata", visitordata);
+module.exports = mongoose.model("visitorfurtherdata", visitorfurtherdata);
