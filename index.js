@@ -97,6 +97,40 @@ async function sendemail2(recipientEmail, status, link) {
     return false;
   }
 }
+async function sendemailwithqr(recipientEmail, status, qrcode, apnum) {
+  let body;
+  if (status == "approved") {
+    body = `
+        <h1> your request has been approved completely and we cannot wait to have you with us.</h1>
+
+        <h3>This is the QR Code for getting access</h3>
+        <img src = ${qrcode}/>
+        <p>your appointment number is ${apnum}</p> 
+      `;
+  } else {
+    body = `
+        <h1> your request has been ${status}</h1>
+      `;
+  }
+  const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: "sem6sectioncvms@gmail.com", // Your email address
+      pass: "mdlxbnxjzrysbdju", // Your email password
+    },
+  });
+  try {
+    await transporter.sendMail({
+      from: "sem6sectioncvms@gmail.com", // Your email address
+      to: recipientEmail,
+      subject: "Response for Inquiry OF Visit",
+      html: body,
+    });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
 app.get("/", (req, res) => {
   res.send("VMS_API is live");
@@ -419,6 +453,7 @@ app.post("/savefurtherdata", async (req, res) => {
     appid: appid,
     qrcode: qrcode,
   });
+  let apnum;
   try {
     visitordata.updateOne(
       { _id: appid },
@@ -428,9 +463,11 @@ app.post("/savefurtherdata", async (req, res) => {
           console.log(err);
         } else {
           console.log("Updated Docs : ", docs);
+          apnum = docs._id;
         }
       }
     );
+    const emailresp = await sendemailwithqr1(email, "approved", qrcode, apnum);
     const saving = await savequery.save();
     res.status(200).json({ success: true, data: saving });
   } catch (error) {
