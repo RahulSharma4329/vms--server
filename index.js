@@ -492,7 +492,7 @@ app.post("/savefurtherdata", async (req, res) => {
     let email = checkdata[0].email;
     console.log(email);
     const emailresp = await sendemailwithqr(email, "approved", qrcode, apnum);
-    res.status(200).json({ success: false, data: saving });
+    res.status(200).json({ success: true, data: saving });
   } catch (error) {
     res.status(400).json({ success: false, data: apnum, error: error });
   }
