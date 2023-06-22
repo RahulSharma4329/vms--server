@@ -105,7 +105,7 @@ async function sendemailwithqr(recipientEmail, status, qrcode, apnum) {
     body = `
         <h1> your request has been approved completely and we cannot wait to have you with us.</h1>
         <h3>This is the QR Code for getting access</h3>
-        <img src = ${qrcode}/>
+        <img src = ${qrcode} >
         <p>your appointment number is ${apnum}</p> 
       `;
   } else {
@@ -125,6 +125,30 @@ async function sendemailwithqr(recipientEmail, status, qrcode, apnum) {
       from: "sem6sectioncvms@gmail.com", // Your email address
       to: recipientEmail,
       subject: "Response for Inquiry OF Visit",
+      html: body,
+    });
+    return true;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+}
+
+async function sendconf(name) {
+  let body = `<p>${name} + "has arrived and qr code scanned"</p>`;
+
+  const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+      user: "sem6sectioncvms@gmail.com", // Your email address
+      pass: "mdlxbnxjzrysbdju", // Your email password
+    },
+  });
+  try {
+    await transporter.sendMail({
+      from: "sem6sectioncvms@gmail.com", // Your email address
+      to: "rahulsharma4329@gmail.com",
+      subject: "Notification of Vistior Entering",
       html: body,
     });
     return true;
@@ -512,6 +536,9 @@ app.post("/updateqrinfo", async (req, res) => {
         }
       }
     );
+    const checkdata = await visitordata.find({ _id: appid });
+    let name = checkdata[0].name;
+    const emailresp = await sendconf(name);
     res.status(200).json({ success: true });
   } catch (error) {
     res.status(200).json({ success: true, error: error });
