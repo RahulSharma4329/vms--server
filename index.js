@@ -13,6 +13,7 @@ const visitorfurtherdata = require("./models/visitorfurtherdata");
 var bodyParser = require("body-parser");
 
 const app = express();
+app.use(cors());
 mongoose.connect(process.env.DB_CONNECTION, () => {});
 
 const db = mongoose.connection;
@@ -24,7 +25,6 @@ db.once("open", function () {
 app.use(express.json());
 app.use(express.urlencoded({ limit: "100mb", extended: false }));
 app.use(bodyParser.json({ limit: "100mb" }));
-app.use(cors());
 
 router = express.Router();
 
@@ -64,6 +64,7 @@ async function sendemail(recipientEmail, link, name) {
 
 async function sendemail2(recipientEmail, status, link) {
   let body;
+  console.log("sending emailto ", recipientEmail);
   if (status == "closed") {
     status = "accepted";
     body = `
@@ -99,10 +100,10 @@ async function sendemail2(recipientEmail, status, link) {
 }
 async function sendemailwithqr(recipientEmail, status, qrcode, apnum) {
   let body;
+  console.log(recipientEmail);
   if (status == "approved") {
     body = `
         <h1> your request has been approved completely and we cannot wait to have you with us.</h1>
-
         <h3>This is the QR Code for getting access</h3>
         <img src = ${qrcode}/>
         <p>your appointment number is ${apnum}</p> 
@@ -128,7 +129,8 @@ async function sendemailwithqr(recipientEmail, status, qrcode, apnum) {
     });
     return true;
   } catch (error) {
-    return false;
+    console.log(error);
+    return error;
   }
 }
 
@@ -312,6 +314,21 @@ app.post("/getarequests", async (req, res) => {
   }
 });
 
+app.post("/getsrequests", async (req, res) => {
+  try {
+    const reqdata = await visitordata.find({ status: "scanned" });
+    res.status(200).json({
+      success: true,
+      data: reqdata,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      data: [],
+    });
+  }
+});
+
 app.post("/getmoredata", async (req, res) => {
   const id = req.body;
   console.log(id);
@@ -359,7 +376,7 @@ app.post("/savevisitappointment", async (req, res) => {
     const savedata = await query.save();
     const emailresp = await sendemail(
       "rahulsharma4329@gmail.com",
-      "https://deluxe-cuchufli-2f0da8.netlify.app//dashboard",
+      "https://deluxe-cuchufli-2f0da8.netlify.app/dashboard",
       name
     );
     console.log(emailresp);
@@ -429,6 +446,7 @@ app.post("/rejectreq", async (req, res) => {
 });
 
 app.post("/savefurtherdata", async (req, res) => {
+  let apnum;
   const {
     cname,
     country,
@@ -441,6 +459,7 @@ app.post("/savefurtherdata", async (req, res) => {
     appid,
     qrcode,
   } = req.body;
+
   const savequery = new visitorfurtherdata({
     company: cname,
     Country: country,
@@ -453,7 +472,7 @@ app.post("/savefurtherdata", async (req, res) => {
     appid: appid,
     qrcode: qrcode,
   });
-  let apnum;
+
   try {
     visitordata.updateOne(
       { _id: appid },
@@ -463,15 +482,19 @@ app.post("/savefurtherdata", async (req, res) => {
           console.log(err);
         } else {
           console.log("Updated Docs : ", docs);
-          apnum = docs._id;
         }
       }
     );
-    const emailresp = await sendemailwithqr1(email, "approved", qrcode, apnum);
     const saving = await savequery.save();
-    res.status(200).json({ success: true, data: saving });
+
+    const checkdata = await visitordata.find({ _id: appid });
+    apnum = appid;
+    let email = checkdata[0].email;
+    console.log(email);
+    const emailresp = await sendemailwithqr(email, "approved", qrcode, apnum);
+    res.status(200).json({ success: false, data: saving });
   } catch (error) {
-    res.status(400).json({ success: false, data: [], error: error });
+    res.status(400).json({ success: false, data: apnum, error: error });
   }
 });
 
@@ -494,6 +517,7 @@ app.post("/updateqrinfo", async (req, res) => {
     res.status(200).json({ success: true, error: error });
   }
 });
+
 app.listen(port, () => {
   console.log("Server running on port 5000....");
 });
